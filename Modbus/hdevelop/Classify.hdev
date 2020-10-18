@@ -1,0 +1,1127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="19.11.0.0">
+<procedure name="main">
+<interface/>
+<body>
+<l>astart_classfication (Classfication_Result)</l>
+<c></c>
+<l>stop()</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="dev_display_example_reset_windows">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure resets the graphics windows.</c>
+<c>* </c>
+<c>* Close any windows that are listed in key 'window_handles_to_close'.</c>
+<l>try</l>
+<l>    get_dict_tuple (ExampleInternals, 'window_handles_to_close', WindowHandlesToClose)</l>
+<l>catch (Exception)</l>
+<l>    WindowHandlesToClose := []</l>
+<l>endtry</l>
+<l>for I := 0 to |WindowHandlesToClose| - 1 by 1</l>
+<l>    dev_set_window (WindowHandlesToClose[I])</l>
+<l>    dev_close_window ()</l>
+<l>endfor</l>
+<l>set_dict_tuple (ExampleInternals, 'window_handles_to_close', [])</l>
+<c>* </c>
+<c>* Open image window if needed.</c>
+<l>get_dict_param (ExampleInternals, 'keys', [], WindowHandleKeys)</l>
+<l>tuple_find (WindowHandleKeys, 'window_images', Index)</l>
+<l>get_dict_tuple (ExampleInternals, 'window_images_needed', WindowImagesNeeded)</l>
+<l>if (WindowImagesNeeded and Index == -1)</l>
+<c>    * Open new window for images.</c>
+<l>    dev_open_example_image_window (ExampleInternals)</l>
+<l>elseif (not WindowImagesNeeded and Index != -1)</l>
+<c>    * Window for images exists but is not needed -&gt; close it.</c>
+<l>    dev_close_example_image_window (ExampleInternals)</l>
+<l>endif</l>
+<c>* </c>
+<c>* Open legend window if needed.</c>
+<l>get_dict_param (ExampleInternals, 'keys', [], WindowHandleKeys)</l>
+<l>tuple_find (WindowHandleKeys, 'window_legend', Index)</l>
+<l>get_dict_tuple (ExampleInternals, 'window_legend_needed', WindowLegendNeeded)</l>
+<l>if (WindowLegendNeeded and Index == -1)</l>
+<c>    * Open new window for legend.</c>
+<l>    dev_open_example_legend_window (ExampleInternals, 280)</l>
+<l>elseif (not WindowLegendNeeded and Index != -1)</l>
+<c>    * Window for legend exists but is not needed -&gt; close it.</c>
+<l>    dev_close_example_legend_window (ExampleInternals)</l>
+<l>endif</l>
+<c>* </c>
+<c>* Set the correct area (part) of the image window.</c>
+<l>try</l>
+<l>    get_dict_tuple (ExampleInternals, 'window_images', WindowHandleImages)</l>
+<l>    dev_set_window (WindowHandleImages)</l>
+<l>    dev_clear_window ()</l>
+<c>    * Set default window extends</c>
+<l>    dev_set_window_extents (360, 0, 500, 500)</l>
+<l>    dev_set_part (1, 1, -1, -1)</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<c>* </c>
+<c>* Set the correct area (part) of the legend window.</c>
+<l>try</l>
+<l>    get_dict_tuple (ExampleInternals, 'window_legend', WindowHandleLegend)</l>
+<l>    dev_set_window (WindowHandleLegend)</l>
+<l>    dev_clear_window ()</l>
+<l>    dev_set_part (1, 1, -1, -1)</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<l>get_dict_tuple (ExampleInternals, 'window_text', WindowHandleText)</l>
+<l>dev_set_window (WindowHandleText)</l>
+<l>dev_clear_window ()</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_example_reset_windows">
+<parameters>
+<parameter id="ExampleInternals">
+<default_type>integer</default_type>
+<mixed_type>false</mixed_type>
+<sem_type>dict</sem_type>
+<type_list>
+<item>integer</item>
+</type_list>
+</parameter>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_close_example_text_window">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure closes the text window.</c>
+<c></c>
+<l>try</l>
+<l>    get_dict_tuple (ExampleInternals, 'window_text', WindowHandleImages)</l>
+<l>    dev_set_window (WindowHandleImages)</l>
+<l>    dev_close_window ()</l>
+<c>    * Delete key.</c>
+<l>    remove_dict_key (ExampleInternals, 'window_text')</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<l>return ()</l>
+</body>
+<docu id="dev_close_example_text_window">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="check_data_availability">
+<interface>
+<ic>
+<par name="ExampleDataDir" base_type="ctrl" dimension="0"/>
+<par name="PreprocessParamFileName" base_type="ctrl" dimension="0"/>
+<par name="TrainedModelFileName" base_type="ctrl" dimension="0"/>
+<par name="UsePretrainedModel" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure checks if all necessary files are available.</c>
+<c>* </c>
+<l>file_exists (ExampleDataDir, FileExists)</l>
+<l>if (not FileExists)</l>
+<l>    throw (ExampleDataDir + ' does not exist. Please run part 1 and 2 of example series.')</l>
+<l>endif</l>
+<c></c>
+<l>file_exists (PreprocessParamFileName, FileExists)</l>
+<l>if (not FileExists)</l>
+<l>    throw (PreprocessParamFileName + ' does not exist. Please run part 1 of example series.')</l>
+<l>endif</l>
+<c>* </c>
+<l>file_exists (TrainedModelFileName, FileExists)</l>
+<l>if (not FileExists)</l>
+<l>    if (UsePretrainedModel)</l>
+<l>        throw (TrainedModelFileName + ' does not exist. Please run the HALCON Deep Learning installer.')</l>
+<l>    else</l>
+<l>        throw (TrainedModelFileName + ' does not exist. Please run part 2 of example series.')</l>
+<l>    endif</l>
+<l>endif</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="check_data_availability">
+<parameters>
+<parameter id="ExampleDataDir"/>
+<parameter id="PreprocessParamFileName"/>
+<parameter id="TrainedModelFileName"/>
+<parameter id="UsePretrainedModel"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_screen_run_program">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure shows a final text before running the program.</c>
+<c>* </c>
+<l>get_dict_tuple (ExampleInternals, 'show_example_screens', ShowExampleScreens)</l>
+<l>if (not ShowExampleScreens)</l>
+<l>    return ()</l>
+<l>endif</l>
+<c>* </c>
+<c>* Reset the open windows for a clean display.</c>
+<l>set_dict_tuple (ExampleInternals, 'window_images_needed', false)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_legend_needed', false)</l>
+<l>dev_display_example_reset_windows (ExampleInternals)</l>
+<c>* </c>
+<c>* Display explanatory text.</c>
+<l>get_dict_tuple (ExampleInternals, 'window_text', WindowHandleText)</l>
+<l>dev_set_window (WindowHandleText)</l>
+<c>* </c>
+<l>Text := 'We will now apply the trained model from example part 2'</l>
+<l>Text[|Text|] := '\'classify_pill_defects_deep_learning_2_train.hdev\''</l>
+<l>Text[|Text|] := 'to some new images using \'apply_dl_model\'.'</l>
+<c>* </c>
+<l>dev_disp_text (Text, 'window', 'top', 'left', 'black', 'box', 'true')</l>
+<l>dev_disp_text ('Press Run (F5) to continue', 'window', 'bottom', 'right', 'black', [], [])</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_screen_run_program">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_screen_inference_step_1">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure displays the second explanatory part of the inference.</c>
+<c>* </c>
+<l>get_dict_tuple (ExampleInternals, 'show_example_screens', ShowExampleScreens)</l>
+<l>if (not ShowExampleScreens)</l>
+<l>    return ()</l>
+<l>endif</l>
+<c>* </c>
+<c>* Reset the open windows for a clean display.</c>
+<l>set_dict_tuple (ExampleInternals, 'window_images_needed', true)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_legend_needed', false)</l>
+<l>dev_display_example_reset_windows (ExampleInternals)</l>
+<c>* </c>
+<c>* Display explanatory text.</c>
+<l>get_dict_tuple (ExampleInternals, 'window_text', WindowHandleText)</l>
+<l>dev_set_window (WindowHandleText)</l>
+<c>* </c>
+<l>Text := 'Inference steps for one image:'</l>
+<l>Text[|Text|] := ''</l>
+<l>Text[|Text|] := '1. Generate a DLSample for the image using'</l>
+<l>Text[|Text|] := '   \'gen_dl_samples_from_images\'.'</l>
+<c>* </c>
+<l>dev_disp_text (Text, 'window', 'top', 'left', 'black', 'box', 'true')</l>
+<l>dev_disp_text ('Press Run (F5) to continue', 'window', 'bottom', 'right', 'black', [], [])</l>
+<c>* </c>
+<c>* Display raw image.</c>
+<l>get_dict_tuple (ExampleInternals, 'window_images', WindowHandleImages)</l>
+<l>dev_display_raw_image (WindowHandleImages)</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_screen_inference_step_1">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="get_example_inference_images">
+<interface>
+<ic>
+<par name="ImageDir" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ImageFiles" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure creates a list of images used for this example.</c>
+<c>* </c>
+<l>NumSamples := 1</l>
+<l>list_image_files (ImageDir, 'default', 'recursive', ImageFilesAll)</l>
+<c>*** tuple_shuffle (ImageFilesAll, ImageFilesAll)</c>
+<l>ImageFiles := ImageFilesAll[0:NumSamples - 1]</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="get_example_inference_images">
+<parameters>
+<parameter id="ImageDir"/>
+<parameter id="ImageFiles"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_close_example_image_window">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure closes the image window.</c>
+<c></c>
+<l>try</l>
+<l>    get_dict_tuple (ExampleInternals, 'window_images', WindowHandleImages)</l>
+<l>    dev_set_window (WindowHandleImages)</l>
+<l>    dev_close_window ()</l>
+<c>    * Delete key.</c>
+<l>    remove_dict_key (ExampleInternals, 'window_images')</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="dev_close_example_image_window">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_screen_inference_step_3">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure displays the third explanatory part of the inference.</c>
+<c>* </c>
+<l>get_dict_tuple (ExampleInternals, 'show_example_screens', ShowExampleScreens)</l>
+<l>if (not ShowExampleScreens)</l>
+<l>    return ()</l>
+<l>endif</l>
+<c>* </c>
+<c>* Reset the open windows for a clean display.</c>
+<l>set_dict_tuple (ExampleInternals, 'window_images_needed', true)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_legend_needed', true)</l>
+<l>dev_display_example_reset_windows (ExampleInternals)</l>
+<c>* </c>
+<c>* Display explanatory text.</c>
+<l>get_dict_tuple (ExampleInternals, 'window_text', WindowHandleText)</l>
+<l>dev_set_window (WindowHandleText)</l>
+<c>* </c>
+<l>Text := 'Inference steps for one image:'</l>
+<l>Text[|Text|] := ''</l>
+<l>Text[|Text|] := '1. Generate a DLSample for the image using'</l>
+<l>Text[|Text|] := '   \'gen_dl_samples_from_images\'.'</l>
+<l>Text[|Text|] := ''</l>
+<l>Text[|Text|] := '2. Preprocess the image to fit the trained model'</l>
+<l>Text[|Text|] := '   using \'preprocess_dl_samples\'.'</l>
+<l>Text[|Text|] := ''</l>
+<l>Text[|Text|] := '3. Apply the model using \'apply_dl_model\'.'</l>
+<c>* </c>
+<l>dev_disp_text (Text, 'window', 'top', 'left', 'black', 'box', 'true')</l>
+<l>dev_disp_text ('Press Run (F5) to continue', 'window', 'bottom', 'right', 'black', [], [])</l>
+<c>* </c>
+<c>* Display example images,</c>
+<l>dev_display_model_output_image (ExampleInternals)</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_screen_inference_step_3">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_screen_final">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure shows the final message of the example series.</c>
+<c>* </c>
+<l>get_dict_tuple (ExampleInternals, 'show_example_screens', ShowExampleScreens)</l>
+<l>if (not ShowExampleScreens)</l>
+<l>    return ()</l>
+<l>endif</l>
+<c>* </c>
+<l>dev_open_example_text_window (ExampleInternals)</l>
+<c>* </c>
+<c>* Reset the open windows for a clean display.</c>
+<l>set_dict_tuple (ExampleInternals, 'window_images_needed', false)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_legend_needed', false)</l>
+<l>dev_display_example_reset_windows (ExampleInternals)</l>
+<c>* </c>
+<l>get_dict_tuple (ExampleInternals, 'window_text', WindowHandleText)</l>
+<l>dev_set_window (WindowHandleText)</l>
+<c>* </c>
+<c>* Display instruction text.</c>
+<l>Text := 'Congratulations!'</l>
+<l>Text[|Text|] := 'You have finished the series of examples for DL classification.'</l>
+<l>Text[|Text|] := ''</l>
+<l>Text[|Text|] := 'You can now train a classification model on your own data.'</l>
+<l>Text[|Text|] := ''</l>
+<c>* </c>
+<l>dev_disp_text (Text, 'window', 'top', 'left', 'black', 'box', 'true')</l>
+<l>dev_disp_text ('End of program.', 'window', 'bottom', 'right', 'black', 'box', 'true')</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_screen_final">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_close_example_windows">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure closes all example windows.</c>
+<c>* </c>
+<l>get_dict_tuple (ExampleInternals, 'show_example_screens', ShowExampleScreens)</l>
+<l>if (not ShowExampleScreens)</l>
+<l>    return ()</l>
+<l>endif</l>
+<c>* </c>
+<l>dev_close_example_text_window (ExampleInternals)</l>
+<l>dev_close_example_image_window (ExampleInternals)</l>
+<l>dev_close_example_legend_window (ExampleInternals)</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_close_example_windows">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_screen_introduction">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure displays an overview on the different example parts.</c>
+<c>* </c>
+<l>get_dict_tuple (ExampleInternals, 'show_example_screens', ShowExampleScreens)</l>
+<l>if (not ShowExampleScreens)</l>
+<l>    return ()</l>
+<l>endif</l>
+<c>* </c>
+<c>* Reset the open windows for a clean display.</c>
+<l>set_dict_tuple (ExampleInternals, 'window_images_needed', false)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_legend_needed', false)</l>
+<l>dev_display_example_reset_windows (ExampleInternals)</l>
+<c>* </c>
+<c>* Display explanatory text.</c>
+<l>get_dict_tuple (ExampleInternals, 'window_text', WindowHandleText)</l>
+<l>dev_set_window (WindowHandleText)</l>
+<c>* </c>
+<l>Text := 'This example is part of a series of examples, which summarize '</l>
+<l>Text[|Text|] := 'the workflow for DL classification. It uses the MVTec pill dataset.'</l>
+<l>Text[|Text|] := ''</l>
+<l>Text[|Text|] := 'The four parts are: '</l>
+<l>Text[|Text|] := '1. Dataset preprocessing.'</l>
+<l>Text[|Text|] := '2. Training of the model.'</l>
+<l>Text[|Text|] := '3. Evaluation of the trained model.'</l>
+<l>Text[|Text|] := '4. Inference on new images.'</l>
+<l>Text[|Text|] := ''</l>
+<l>Text[|Text|] := 'This example covers part 4: \'Inference on new images\'.'</l>
+<c>* </c>
+<l>dev_disp_text (Text, 'window', 'top', 'left', 'black', 'box', 'true')</l>
+<l>dev_disp_text ('Press Run (F5) to continue', 'window', 'bottom', 'right', 'black', [], [])</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_screen_introduction">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_example_init">
+<interface>
+<ic>
+<par name="ShowExampleScreens" base_type="ctrl" dimension="0"/>
+<par name="UsePretrainedModel" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure initializes the graphic windows that are used for explanations during the example.</c>
+<c>* </c>
+<c>* A dict that will be used/adapted by other example procedures.</c>
+<l>create_dict (ExampleInternals)</l>
+<l>set_dict_tuple (ExampleInternals, 'show_example_screens', ShowExampleScreens)</l>
+<l>set_dict_tuple (ExampleInternals, 'use_pretrained_model', UsePretrainedModel)</l>
+<l>if (not ShowExampleScreens)</l>
+<l>    return ()</l>
+<l>endif</l>
+<c>* </c>
+<l>dev_close_window ()</l>
+<l>dev_open_example_text_window (ExampleInternals)</l>
+<c>* </c>
+<l>set_dict_tuple (ExampleInternals, 'window_images_needed', false)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_legend_needed', false)</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_example_init">
+<parameters>
+<parameter id="ExampleInternals"/>
+<parameter id="ShowExampleScreens">
+<default_type>integer</default_type>
+<default_value>0</default_value>
+<description lang="en_US">A boolean that is used to enable/disable explanation screens in this example</description>
+<multivalue>false</multivalue>
+<sem_type>string</sem_type>
+<type_list>
+<item>integer</item>
+</type_list>
+<value_max>1</value_max>
+<value_min>0</value_min>
+</parameter>
+<parameter id="UsePretrainedModel"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_screen_inference_step_2">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure displays the second explanatory part of the inference.</c>
+<c>* </c>
+<l>get_dict_tuple (ExampleInternals, 'show_example_screens', ShowExampleScreens)</l>
+<l>if (not ShowExampleScreens)</l>
+<l>    return ()</l>
+<l>endif</l>
+<c>* </c>
+<c>* Reset the open windows for a clean display.</c>
+<l>set_dict_tuple (ExampleInternals, 'window_images_needed', true)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_legend_needed', false)</l>
+<l>dev_display_example_reset_windows (ExampleInternals)</l>
+<c>* </c>
+<c>* Display explanatory text.</c>
+<l>get_dict_tuple (ExampleInternals, 'window_text', WindowHandleText)</l>
+<l>dev_set_window (WindowHandleText)</l>
+<c>* </c>
+<l>Text := 'Inference steps for one image:'</l>
+<l>Text[|Text|] := ''</l>
+<l>Text[|Text|] := '1. Generate a DLSample for the image using'</l>
+<l>Text[|Text|] := '   \'gen_dl_samples_from_images\'.'</l>
+<l>Text[|Text|] := ''</l>
+<l>Text[|Text|] := '2. Preprocess the image to suit the trained model'</l>
+<l>Text[|Text|] := '   using \'preprocess_dl_samples\'.'</l>
+<c>* </c>
+<l>dev_disp_text (Text, 'window', 'top', 'left', 'black', 'box', 'true')</l>
+<l>dev_disp_text ('Press Run (F5) to continue', 'window', 'bottom', 'right', 'black', [], [])</l>
+<c>* </c>
+<c>* Display example images.</c>
+<l>get_dict_tuple (ExampleInternals, 'window_images', WindowHandleImages)</l>
+<l>dev_set_window (WindowHandleImages)</l>
+<l>dev_display_preprocessed_image (ExampleInternals)</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_screen_inference_step_2">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_open_example_legend_window">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+<par name="WindowWidth" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure initializes the graphic windows that are used to display a legend.</c>
+<c></c>
+<l>get_dict_tuple (ExampleInternals, 'window_images_height', WindowImagesHeight)</l>
+<l>get_dict_tuple (ExampleInternals, 'window_images_width', WindowImagesWidth)</l>
+<l>get_dict_tuple (ExampleInternals, 'window_images_x', WindowImagesX)</l>
+<l>get_dict_tuple (ExampleInternals, 'window_images_y', WindowImagesY)</l>
+<l>dev_open_window (WindowImagesY, WindowImagesX + WindowImagesWidth + 5, WindowWidth, WindowImagesHeight, 'black', WindowHandleLegend)</l>
+<l>set_display_font (WindowHandleLegend, 14, 'mono', 'true', 'false')</l>
+<l>set_dict_tuple (ExampleInternals, 'window_legend', WindowHandleLegend)</l>
+<l>return ()</l>
+</body>
+<docu id="dev_open_example_legend_window">
+<parameters>
+<parameter id="ExampleInternals"/>
+<parameter id="WindowWidth"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_close_example_legend_window">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure closes the legend window.</c>
+<c></c>
+<l>try</l>
+<l>    get_dict_tuple (ExampleInternals, 'window_legend', WindowHandleLegend)</l>
+<l>    dev_set_window (WindowHandleLegend)</l>
+<l>    dev_close_window ()</l>
+<c>    * Delete key.</c>
+<l>    remove_dict_key (ExampleInternals, 'window_legend')</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="dev_close_example_legend_window">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_screen_example_images">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure displays an overview on the different example parts.</c>
+<c>* </c>
+<l>get_dict_tuple (ExampleInternals, 'show_example_screens', ShowExampleScreens)</l>
+<l>if (not ShowExampleScreens)</l>
+<l>    return ()</l>
+<l>endif</l>
+<c>* </c>
+<c>* Example data folder containing the outputs of the previous example series.</c>
+<l>ExampleDataDir := 'classify_pill_defects_data'</l>
+<c>* </c>
+<c>* Check if the trained model and preprocessing parameters are available.</c>
+<l>get_dict_tuple (ExampleInternals, 'use_pretrained_model', UsePretrainedModel)</l>
+<l>if (UsePretrainedModel)</l>
+<c>    * File name of dict containing parameters used for preprocessing.</c>
+<l>    PreprocessParamFileName := 'classify_pill_defects_preprocess_param.hdict'</l>
+<c>    * File name of dict containing parameters used for preprocessing.</c>
+<l>    RetrainedModelFileName := 'classify_pill_defects.hdl'</l>
+<l>else</l>
+<c>    * File name of dict containing parameters used for preprocessing.</c>
+<l>    DataDirectory := ExampleDataDir + '/dldataset_pill_300x300'</l>
+<l>    PreprocessParamFileName := DataDirectory + '/dl_preprocess_param.hdict'</l>
+<c>    * File name of dict containing parameters used for preprocessing.</c>
+<l>    RetrainedModelFileName := ExampleDataDir + '/best_dl_model_classification.hdl'</l>
+<l>endif</l>
+<l>file_exists (PreprocessParamFileName, PreprocessParamExists)</l>
+<l>file_exists (RetrainedModelFileName, ModelExists)</l>
+<c>* </c>
+<c>* Reset the open windows for a clean display.</c>
+<l>WindowImageNeeded := PreprocessParamExists and ModelExists</l>
+<l>set_dict_tuple (ExampleInternals, 'window_images_needed', WindowImageNeeded)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_legend_needed', false)</l>
+<l>dev_display_example_reset_windows (ExampleInternals)</l>
+<c>* </c>
+<c>* Display explanatory text.</c>
+<l>get_dict_tuple (ExampleInternals, 'window_text', WindowHandleText)</l>
+<l>dev_set_window (WindowHandleText)</l>
+<c>* </c>
+<l>if (not PreprocessParamExists or not ModelExists)</l>
+<l>    if (UsePretrainedModel)</l>
+<l>        Text := 'The pretrained model and corresponding preprocessing'</l>
+<l>        Text[|Text|] := 'parameters could not be found.'</l>
+<l>        Text[|Text|] := ''</l>
+<l>        Text[|Text|] := 'These files are part of a separate installer. Please'</l>
+<l>        Text[|Text|] := 'refer to the Installation Guide for more information on'</l>
+<l>        Text[|Text|] := 'this topic!'</l>
+<l>    else</l>
+<c>        * </c>
+<c>        * Part 1 and/or part 2 should be run before continuing this example.</c>
+<l>        Text := 'To run this example you need the output of:'</l>
+<l>        if (not PreprocessParamExists)</l>
+<l>            Text[|Text|] := '- \'classify_pill_defects_deep_learning_1_prepare.hdev\''</l>
+<l>        endif</l>
+<l>        if (not ModelExists)</l>
+<l>            Text[|Text|] := '- \'classify_pill_defects_deep_learning_2_train.hdev\''</l>
+<l>        endif</l>
+<l>        Text[|Text|] := ''</l>
+<l>        if (not PreprocessParamExists and not ModelExists)</l>
+<l>            Text[|Text|] := 'Please run these examples first.'</l>
+<l>        else</l>
+<l>            Text[|Text|] := 'Please run this example first.'</l>
+<l>        endif</l>
+<l>    endif</l>
+<c>    * </c>
+<l>    set_display_font (WindowHandleText, 20, 'mono', 'true', 'false')</l>
+<l>    dev_disp_text (Text, 'window', 'top', 'left', 'red', 'box', 'true')</l>
+<l>    set_display_font (WindowHandleText, 16, 'mono', 'true', 'false')</l>
+<l>else</l>
+<c>    * </c>
+<c>    * All parts have been run before, hence continue with the example text.</c>
+<l>    Text := 'We now have a trained DL classification model.'</l>
+<l>    Text[|Text|] := 'We are ready to apply it to new images.'</l>
+<l>    Text[|Text|] := ''</l>
+<l>    Text[|Text|] := 'These images are not part of the preprocessed dataset.'</l>
+<l>    Text[|Text|] := ''</l>
+<l>    Text[|Text|] := 'The images have to be preprocessed in the same way as the DLDataset,'</l>
+<l>    Text[|Text|] := 'which was used for training.'</l>
+<l>    Text[|Text|] := ''</l>
+<l>    Text[|Text|] := 'Below you see a few example images.'</l>
+<c>    * </c>
+<l>    dev_disp_text (Text, 'window', 'top', 'left', 'black', 'box', 'true')</l>
+<l>    dev_disp_text ('Press Run (F5) to continue', 'window', 'bottom', 'right', 'black', [], [])</l>
+<c>    * </c>
+<c>    * Add proprocessing parameters to ExampleInternals.</c>
+<l>    set_dict_tuple (ExampleInternals, 'preprocess_param_file_name', PreprocessParamFileName)</l>
+<c>    * </c>
+<c>    * Display an example image</c>
+<l>    get_dict_tuple (ExampleInternals, 'window_images', WindowHandleImages)</l>
+<l>    dev_set_window (WindowHandleImages)</l>
+<l>    dev_display_pills_example_dataset_preview ()</l>
+<l>endif</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_screen_example_images">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_open_example_text_window">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>WindowWidthText := 800</l>
+<l>WindowHeightText := 300</l>
+<l>WindowBGColor := 'gray'</l>
+<l>dev_open_window (0, 0, WindowWidthText, WindowHeightText, WindowBGColor, WindowHandleText)</l>
+<l>set_display_font (WindowHandleText, 16, 'mono', 'true', 'false')</l>
+<l>set_dict_tuple (ExampleInternals, 'window_text', WindowHandleText)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_text_width', WindowWidthText)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_text_height', WindowHeightText)</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_open_example_text_window">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_open_example_image_window">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure initializes the graphic windows that are used to display example images.</c>
+<c>* </c>
+<l>WindowHeightText := 300</l>
+<l>WindowWidthImage := 500</l>
+<l>WindowHeightImages := 500</l>
+<l>WindowBGColor := 'black'</l>
+<c>* </c>
+<l>WindowYImages := WindowHeightText + 60</l>
+<l>WindowXImages := 0</l>
+<l>dev_open_window (WindowYImages, WindowXImages, WindowWidthImage, WindowHeightImages, WindowBGColor, WindowHandleImages)</l>
+<l>set_display_font (WindowHandleImages, 16, 'mono', 'true', 'false')</l>
+<l>set_dict_tuple (ExampleInternals, 'window_images', WindowHandleImages)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_images_width', WindowWidthImage)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_images_height', WindowHeightImages)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_images_x', WindowXImages)</l>
+<l>set_dict_tuple (ExampleInternals, 'window_images_y', WindowYImages)</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_open_example_image_window">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_pills_example_dataset_preview">
+<interface/>
+<body>
+<c>* This procedure displays a selection of pill images.</c>
+<c>* </c>
+<l>try</l>
+<c>    * Read some example images.</c>
+<l>    GinsengPath := 'pill/ginseng/' + ['good/pill_ginseng_good_001','contamination/pill_ginseng_contamination_004','crack/pill_ginseng_crack_001']</l>
+<l>    MagnesiumPath := 'pill/magnesium/' + ['good/pill_magnesium_good_001','contamination/pill_magnesium_contamination_001','crack/pill_magnesium_crack_001']</l>
+<l>    MintPath := 'pill/mint/' + ['good/pill_mint_good_001','contamination/pill_mint_contamination_001','crack/pill_mint_crack_009']</l>
+<l>    read_image (Image, [GinsengPath,MagnesiumPath,MintPath])</l>
+<l>    tile_images (Image, TiledImage, 3, 'horizontal')</l>
+<c>    * Generate background image.</c>
+<l>    get_image_size (TiledImage, Width, Height)</l>
+<l>    gen_image_proto (TiledImage, ImageR, 18)</l>
+<l>    gen_image_proto (TiledImage, ImageG, 22)</l>
+<l>    gen_image_proto (TiledImage, ImageB, 28)</l>
+<l>    append_channel (ImageR, ImageG, ImageRG)</l>
+<l>    append_channel (ImageRG, ImageB, ImageRGB)</l>
+<c>    * Display the background and the images.</c>
+<l>    dev_set_window_extents (360, 0, 800, 400)</l>
+<l>    get_image_size (ImageRGB, Width1, Height1)</l>
+<l>    dev_set_part (0, 0, Height1, Width1)</l>
+<l>    dev_display (ImageRGB)</l>
+<l>    dev_display (TiledImage)</l>
+<l>catch (Exception)</l>
+<c>    * If the example image files are not found, an error message is displayed.</c>
+<l>    ErrorAndAdviceText := 'The images required for this example could not be found.'</l>
+<l>    ErrorAndAdviceText := [ErrorAndAdviceText,'']</l>
+<l>    ErrorAndAdviceText := [ErrorAndAdviceText,'These images are part of a separate installer. Please']</l>
+<l>    ErrorAndAdviceText := [ErrorAndAdviceText,'refer to the Installation Guide for more information on']</l>
+<l>    ErrorAndAdviceText := [ErrorAndAdviceText,'this topic!']</l>
+<l>    dev_clear_window ()</l>
+<l>    dev_disp_text (ErrorAndAdviceText, 'window', 'center', 'left', 'red', [], [])</l>
+<l>endtry</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_pills_example_dataset_preview">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="dev_display_raw_image">
+<interface>
+<ic>
+<par name="WindowHandleImages" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure displays a raw image as inserted into the sample.</c>
+<c>* </c>
+<l>dev_set_window (WindowHandleImages)</l>
+<c>* Read image and fit the window handle.</c>
+<l>read_image (Image, 'pill/discs/Disc25.jpg')</l>
+<c>* </c>
+<l>get_image_size (Image, Width, Height)</l>
+<l>get_window_extents (WindowHandleImages, Row, Column, Width1, Height1)</l>
+<c>* </c>
+<l>if (Height &lt; Width)</l>
+<l>    ZoomFactor := Width1 / real(Width)</l>
+<l>else</l>
+<l>    ZoomFactor := Height1 / real(Height)</l>
+<l>endif</l>
+<l>zoom_image_factor (Image, Image, ZoomFactor, ZoomFactor, 'bilinear')</l>
+<c>* </c>
+<l>dev_set_window_extents (360, 0, ZoomFactor * Width, ZoomFactor * Height)</l>
+<l>dev_display (Image)</l>
+<l>dev_set_part (1, 1, -1, -1)</l>
+<l>dev_display (Image)</l>
+<l>dev_disp_text ('Raw image', 'window', 'top', 'left', 'black', [], [])</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_raw_image">
+<parameters>
+<parameter id="WindowHandleImages"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_preprocessed_image">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure displays an example of a preprocessed image.</c>
+<c>* </c>
+<c>* Read image.</c>
+<l>read_image (Image, 'pill/Discs/disc24.jpg')</l>
+<c>* </c>
+<c>* Preprocess image.</c>
+<l>get_dict_tuple (ExampleInternals, 'preprocess_param_file_name', PreprocessParamFileName)</l>
+<l>read_dict (PreprocessParamFileName, [], [], DLPreprocessParam)</l>
+<c>* </c>
+<l>preprocess_dl_model_images (Image, Image, DLPreprocessParam)</l>
+<l>set_dict_object (Image, ExampleInternals, 'preprocessed_image')</l>
+<c>* </c>
+<c>* Set preprocessed image to ExampleInternals.</c>
+<l>set_dict_object (Image, ExampleInternals, 'example_image_preprocessed')</l>
+<c>* </c>
+<c>* Display preprocessed image.</c>
+<l>get_image_size (Image, Width, Height)</l>
+<l>dev_set_part (0, 0, Height, Width)</l>
+<l>dev_display (Image)</l>
+<l>dev_disp_text ('Preprocessed image', 'window', 'top', 'left', 'black', [], [])</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_preprocessed_image">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="dev_display_model_output_image">
+<interface>
+<ic>
+<par name="ExampleInternals" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure visualizes the apply step.</c>
+<c>* </c>
+<c>* Get windows and adapt size.</c>
+<l>get_dict_tuple (ExampleInternals, 'window_images', WindowHandleImages)</l>
+<l>get_dict_tuple (ExampleInternals, 'window_legend', WindowHandleLegend)</l>
+<l>get_window_extents (WindowHandleImages, Row, Column, Width, Height)</l>
+<l>dev_set_window (WindowHandleImages)</l>
+<l>dev_set_window_extents (-1, -1, Width, Height + 40.576)</l>
+<l>get_window_extents (WindowHandleLegend, Row, Column, Width, Height)</l>
+<l>dev_set_window (WindowHandleLegend)</l>
+<l>dev_set_window_extents (-1, -1, Width, Height + 40.576)</l>
+<c>* </c>
+<c>* Create DLResult dictionary.</c>
+<l>create_dict (DLResult)</l>
+<l>set_dict_tuple (DLResult, 'classification_class_names', 'contamination')</l>
+<l>set_dict_tuple (DLResult, 'classification_class_ids', 0)</l>
+<l>set_dict_tuple (DLResult, 'classification_confidences', 0.98)</l>
+<c>* </c>
+<c>* Create DLSample dictionary.</c>
+<l>create_dict (DLSample)</l>
+<l>get_dict_object (Image, ExampleInternals, 'example_image_preprocessed')</l>
+<l>set_dict_object (Image, DLSample, 'image')</l>
+<c>* </c>
+<c>* Create DLDatasetInfo.</c>
+<l>create_dict (DLDatasetInfo)</l>
+<l>set_dict_tuple (DLDatasetInfo, 'class_ids', [0,1,2])</l>
+<l>set_dict_tuple (DLDatasetInfo, 'class_names', ['contamination','crack','good'])</l>
+<c>* </c>
+<c>* Display sample and result.</c>
+<l>create_dict (WindowHandleDict)</l>
+<l>get_dict_tuple (ExampleInternals, 'window_images', WindowHandleImages)</l>
+<l>get_dict_tuple (ExampleInternals, 'window_legend', WindowHandleLegend)</l>
+<l>set_dict_tuple (WindowHandleDict, 'classification_result', [WindowHandleImages,WindowHandleLegend])</l>
+<l>dev_display_dl_data (DLSample, DLResult, DLDatasetInfo, 'classification_result', [], WindowHandleDict, ClassificationLabelIDResult)</l>
+<c>* </c>
+<l>dev_set_window (WindowHandleImages)</l>
+<l>dev_disp_text ('Output of \'apply_dl_model\'', 'window', 'top', 'left', 'black', [], [])</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="dev_display_model_output_image">
+<parameters>
+<parameter id="ExampleInternals"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="start_classification">
+<interface>
+<io>
+<par name="start" base_type="iconic" dimension="0"/>
+</io>
+<oc>
+<par name="ClassificationLabelIDResult" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>return ()</l>
+</body>
+<docu id="start_classification">
+<parameters>
+<parameter id="ClassificationLabelIDResult"/>
+<parameter id="start"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="astart_classfication">
+<interface>
+<oc>
+<par name="ClassificationClassID" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,1]" as_ord="1">* Image Acquisition 01: Code generated by Image Acquisition 01</c>
+<c as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2]" as_ord="1">* Image Acquisition 01: Attention: The initialization may fail in case parameters need to</c>
+<c as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2]" as_ord="2">* Image Acquisition 01: be set in a specific order (e.g., image resolution vs. offset).</c>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,1]" as_ord="1">open_framegrabber ('GigEVision2', 0, 0, 0, 0, 0, 0, 'progressive', -1, 'default', -1, 'false', 'default', 'c42f90f85356_Hikvision_MVCA06010GC', 0, -1, AcqHandle)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="1">set_framegrabber_param (AcqHandle, 'DeviceConnectionSelector', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="2">set_framegrabber_param (AcqHandle, 'DeviceLinkSelector', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="3">set_framegrabber_param (AcqHandle, 'DeviceLinkHeartbeatMode', 'On')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="4">set_framegrabber_param (AcqHandle, 'DeviceStreamChannelSelector', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="5">set_framegrabber_param (AcqHandle, 'DeviceStreamChannelPacketSize', 2924)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="6">set_framegrabber_param (AcqHandle, 'RegionSelector', 'Region0')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="7">set_framegrabber_param (AcqHandle, 'RegionDestination', 'Stream0')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="8">set_framegrabber_param (AcqHandle, 'Width', 1864)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="9">set_framegrabber_param (AcqHandle, 'Height', 1864)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="10">set_framegrabber_param (AcqHandle, 'OffsetX', 528)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="11">set_framegrabber_param (AcqHandle, 'OffsetY', 166)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="12">set_framegrabber_param (AcqHandle, 'ReverseX', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="13">set_framegrabber_param (AcqHandle, 'PixelFormat', 'YUV422_8')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="14">set_framegrabber_param (AcqHandle, 'TestPatternGeneratorSelector', 'Region0')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="15">set_framegrabber_param (AcqHandle, 'TestPattern', 'Off')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="16">set_framegrabber_param (AcqHandle, 'BinningSelector', 'Region0')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="17">set_framegrabber_param (AcqHandle, 'BinningHorizontal', 'BinningHorizontal1')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="18">set_framegrabber_param (AcqHandle, 'BinningVertical', 'BinningVertical1')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="19">set_framegrabber_param (AcqHandle, 'FrameSpecInfoSelector', 'Timestamp')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="20">set_framegrabber_param (AcqHandle, 'FrameSpecInfo', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="21">set_framegrabber_param (AcqHandle, 'AcquisitionMode', 'Continuous')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="22">set_framegrabber_param (AcqHandle, 'AcquisitionBurstFrameCount', 1)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="23">set_framegrabber_param (AcqHandle, 'AcquisitionFrameRate', 7.4)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="24">set_framegrabber_param (AcqHandle, 'AcquisitionFrameRateEnable', 1)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="25">set_framegrabber_param (AcqHandle, 'TriggerSelector', 'FrameBurstStart')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="26">set_framegrabber_param (AcqHandle, 'TriggerMode', 'Off')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="27">set_framegrabber_param (AcqHandle, 'ExposureTime', 10000.0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="28">set_framegrabber_param (AcqHandle, 'ExposureAuto', 'Off')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="29">set_framegrabber_param (AcqHandle, 'AutoExposureTimeLowerLimit', 27)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="30">set_framegrabber_param (AcqHandle, 'AutoExposureTimeUpperLimit', 107526)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="31">set_framegrabber_param (AcqHandle, 'HDREnable', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="32">set_framegrabber_param (AcqHandle, 'HDRSelector', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="33">set_framegrabber_param (AcqHandle, 'HDRShuter', 27)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="34">set_framegrabber_param (AcqHandle, 'GainAuto', 'Continuous')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="35">set_framegrabber_param (AcqHandle, 'AutoGainLowerLimit', 15.0062)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="36">set_framegrabber_param (AcqHandle, 'AutoGainUpperLimit', 20.0322)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="37">set_framegrabber_param (AcqHandle, 'DigitalShiftEnable', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="38">set_framegrabber_param (AcqHandle, 'Brightness', 255)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="39">set_framegrabber_param (AcqHandle, 'BlackLevelEnable', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="40">set_framegrabber_param (AcqHandle, 'BalanceWhiteAuto', 'Continuous')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="41">set_framegrabber_param (AcqHandle, 'GammaSelector', 'sRGB')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="42">set_framegrabber_param (AcqHandle, 'GammaEnable', 1)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="43">* set_framegrabber_param (AcqHandle, 'Sharpness', 10)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="44">set_framegrabber_param (AcqHandle, 'SharpnessEnable', 1)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="45">set_framegrabber_param (AcqHandle, 'HueEnable', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="46">set_framegrabber_param (AcqHandle, 'SaturationEnable', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="47">set_framegrabber_param (AcqHandle, 'AutoFunctionAOISelector', 'AOI1')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="48">set_framegrabber_param (AcqHandle, 'AutoFunctionAOIWidth', 2072)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="49">set_framegrabber_param (AcqHandle, 'AutoFunctionAOIHeight', 2048)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="50">set_framegrabber_param (AcqHandle, 'AutoFunctionAOIOffsetX', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="51">set_framegrabber_param (AcqHandle, 'AutoFunctionAOIOffsetY', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="52">set_framegrabber_param (AcqHandle, 'AutoFunctionAOIUsageIntensity', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="53">set_framegrabber_param (AcqHandle, 'LUTSelector', 'Luminance')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="54">set_framegrabber_param (AcqHandle, 'LUTEnable', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="55">set_framegrabber_param (AcqHandle, 'LUTIndex', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="56">set_framegrabber_param (AcqHandle, 'LUTValue', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="57">set_framegrabber_param (AcqHandle, 'LUTValueAll', '0x0000040008000c001000140018001c002000240028002c003000340038003c004000440048004c005000540058005c006000640068006c007000740078007c008000840088008c009000940098009c00a000a400a800ac00b000b400b800bc00c000c400c800cc00d000d400d800dc00e000e400e800ec00f000f400f800fc000001040108010c011001140118011c012001240128012c013001340138013c014001440148014c015001540158015c016001640168016c017001740178017c018001840188018c019001940198019c01a001a401a801ac01b001b401b801bc01c001c401c801cc01d001d401d801dc01e001e401e801ec01f001f401f801fc010002040208020c021002140218021c022002240228022c023002340238023c024002440248024c025002540258025c026002640268026c027002740278027c028002840288028c029002940298029c02a002a402a802ac02b002b402b802bc02c002c402c802cc02d002d402d802dc02e002e402e802ec02f002f402f802fc020003040308030c031003140318031c032003240328032c033003340338033c034003440348034c035003540358035c036003640368036c037003740378037c038003840388038c039003940398039c03a003a403a803ac03b003b403b803bc03c003c403c803cc03d003d403d803dc03e003e403e803ec03f003f403f803fc030004040408040c041004140418041c042004240428042c043004340438043c044004440448044c045004540458045c046004640468046c047004740478047c048004840488048c049004940498049c04a004a404a804ac04b004b404b804bc04c004c404c804cc04d004d404d804dc04e004e404e804ec04f004f404f804fc040005040508050c051005140518051c052005240528052c053005340538053c054005440548054c055005540558055c056005640568056c057005740578057c058005840588058c059005940598059c05a005a405a805ac05b005b405b805bc05c005c405c805cc05d005d405d805dc05e005e405e805ec05f005f405f805fc050006040608060c061006140618061c062006240628062c063006340638063c064006440648064c065006540658065c066006640668066c067006740678067c068006840688068c069006940698069c06a006a406a806ac06b006b406b806bc06c006c406c806cc06d006d406d806dc06e006e406e806ec06f006f406f806fc060007040708070c071007140718071c072007240728072c073007340738073c074007440748074c075007540758075c076007640768076c077007740778077c078007840788078c079007940798079c07a007a407a807ac07b007b407b807bc07c007c407c807cc07d007d407d807dc07e007e407e807ec07f007f407f807fc070008040808080c081008140818081c082008240828082c083008340838083c084008440848084c085008540858085c086008640868086c087008740878087c088008840888088c089008940898089c08a008a408a808ac08b008b408b808bc08c008c408c808cc08d008d408d808dc08e008e408e808ec08f008f408f808fc080009040908090c091009140918091c092009240928092c093009340938093c094009440948094c095009540958095c096009640968096c097009740978097c098009840988098c099009940998099c09a009a409a809ac09b009b409b809bc09c009c409c809cc09d009d409d809dc09e009e409e809ec09f009f409f809fc09000a040a080a0c0a100a140a180a1c0a200a240a280a2c0a300a340a380a3c0a400a440a480a4c0a500a540a580a5c0a600a640a680a6c0a700a740a780a7c0a800a840a880a8c0a900a940a980a9c0aa00aa40aa80aac0ab00ab40ab80abc0ac00ac40ac80acc0ad00ad40ad80adc0ae00ae40ae80aec0af00af40af80afc0a000b040b080b0c0b100b140b180b1c0b200b240b280b2c0b300b340b380b3c0b400b440b480b4c0b500b540b580b5c0b600b640b680b6c0b700b740b780b7c0b800b840b880b8c0b900b940b980b9c0ba00ba40ba80bac0bb00bb40bb80bbc0bc00bc40bc80bcc0bd00bd40bd80bdc0be00be40be80bec0bf00bf40bf80bfc0b000c040c080c0c0c100c140c180c1c0c200c240c280c2c0c300c340c380c3c0c400c440c480c4c0c500c540c580c5c0c600c640c680c6c0c700c740c780c7c0c800c840c880c8c0c900c940c980c9c0ca00ca40ca80cac0cb00cb40cb80cbc0cc00cc40cc80ccc0cd00cd40cd80cdc0ce00ce40ce80cec0cf00cf40cf80cfc0c000d040d080d0c0d100d140d180d1c0d200d240d280d2c0d300d340d380d3c0d400d440d480d4c0d500d540d580d5c0d600d640d680d6c0d700d740d780d7c0d800d840d880d8c0d900d940d980d9c0da00da40da80dac0db00db40db80dbc0dc00dc40dc80dcc0dd00dd40dd80ddc0de00de40de80dec0df00df40df80dfc0d000e040e080e0c0e100e140e180e1c0e200e240e280e2c0e300e340e380e3c0e400e440e480e4c0e500e540e580e5c0e600e640e680e6c0e700e740e780e7c0e800e840e880e8c0e900e940e980e9c0ea00ea40ea80eac0eb00eb40eb80ebc0ec00ec40ec80ecc0ed00ed40ed80edc0ee00ee40ee80eec0ef00ef40ef80efc0e000f040f080f0c0f100f140f180f1c0f200f240f280f2c0f300f340f380f3c0f400f440f480f4c0f500f540f580f5c0f600f640f680f6c0f700f740f780f7c0f800f840f880f8c0f900f940f980f9c0fa00fa40fa80fac0fb00fb40fb80fbc0fc00fc40fc80fcc0fd00fd40fd80fdc0fe00fe40fe80fec0ff00ff40ff80ffc0f0000040008000c001000140018001c002000240028002c003000340038003c004000440048004c005000540058005c006000640068006c007000740078007c008000840088008c009000940098009c00a000a400a800ac00b000b400b800bc00c000c400c800cc00d000d400d800dc00e000e400e800ec00f000f400f800fc000001040108010c011001140118011c012001240128012c013001340138013c014001440148014c015001540158015c016001640168016c017001740178017c018001840188018c019001940198019c01a001a401a801ac01b001b401b801bc01c001c401c801cc01d001d401d801dc01e001e401e801ec01f001f401f801fc010002040208020c021002140218021c022002240228022c023002340238023c024002440248024c025002540258025c026002640268026c027002740278027c028002840288028c029002940298029c02a002a402a802ac02b002b402b802bc02c002c402c802cc02d002d402d802dc02e002e402e802ec02f002f402f802fc020003040308030c031003140318031c032003240328032c033003340338033c034003440348034c035003540358035c036003640368036c037003740378037c038003840388038c039003940398039c03a003a403a803ac03b003b403b803bc03c003c403c803cc03d003d403d803dc03e003e403e803ec03f003f403f803fc030004040408040c041004140418041c042004240428042c043004340438043c044004440448044c045004540458045c046004640468046c047004740478047c048004840488048c049004940498049c04a004a404a804ac04b004b404b804bc04c004c404c804cc04d004d404d804dc04e004e404e804ec04f004f404f804fc040005040508050c051005140518051c052005240528052c053005340538053c054005440548054c055005540558055c056005640568056c057005740578057c058005840588058c059005940598059c05a005a405a805ac05b005b405b805bc05c005c405c805cc05d005d405d805dc05e005e405e805ec05f005f405f805fc050006040608060c061006140618061c062006240628062c063006340638063c064006440648064c065006540658065c066006640668066c067006740678067c068006840688068c069006940698069c06a006a406a806ac06b006b406b806bc06c006c406c806cc06d006d406d806dc06e006e406e806ec06f006f406f806fc060007040708070c071007140718071c072007240728072c073007340738073c074007440748074c075007540758075c076007640768076c077007740778077c078007840788078c079007940798079c07a007a407a807ac07b007b407b807bc07c007c407c807cc07d007d407d807dc07e007e407e807ec07f007f407f807fc070008040808080c081008140818081c082008240828082c083008340838083c084008440848084c085008540858085c086008640868086c087008740878087c088008840888088c089008940898089c08a008a408a808ac08b008b408b808bc08c008c408c808cc08d008d408d808dc08e008e408e808ec08f008f408f808fc080009040908090c091009140918091c092009240928092c093009340938093c094009440948094c095009540958095c096009640968096c097009740978097c098009840988098c099009940998099c09a009a409a809ac09b009b409b809bc09c009c409c809cc09d009d409d809dc09e009e409e809ec09f009f409f809fc09000a040a080a0c0a100a140a180a1c0a200a240a280a2c0a300a340a380a3c0a400a440a480a4c0a500a540a580a5c0a600a640a680a6c0a700a740a780a7c0a800a840a880a8c0a900a940a980a9c0aa00aa40aa80aac0ab00ab40ab80abc0ac00ac40ac80acc0ad00ad40ad80adc0ae00ae40ae80aec0af00af40af80afc0a000b040b080b0c0b100b140b180b1c0b200b240b280b2c0b300b340b380b3c0b400b440b480b4c0b500b540b580b5c0b600b640b680b6c0b700b740b780b7c0b800b840b880b8c0b900b940b980b9c0ba00ba40ba80bac0bb00bb40bb80bbc0bc00bc40bc80bcc0bd00bd40bd80bdc0be00be40be80bec0bf00bf40bf80bfc0b000c040c080c0c0c100c140c180c1c0c200c240c280c2c0c300c340c380c3c0c400c440c480c4c0c500c540c580c5c0c600c640c680c6c0c700c740c780c7c0c800c840c880c8c0c900c940c980c9c0ca00ca40ca80cac0cb00cb40cb80cbc0cc00cc40cc80ccc0cd00cd40cd80cdc0ce00ce40ce80cec0cf00cf40cf80cfc0c000d040d080d0c0d100d140d180d1c0d200d240d280d2c0d300d340d380d3c0d400d440d480d4c0d500d540d580d5c0d600d640d680d6c0d700d740d780d7c0d800d840d880d8c0d900d940d980d9c0da00da40da80dac0db00db40db80dbc0dc00dc40dc80dcc0dd00dd40dd80ddc0de00de40de80dec0df00df40df80dfc0d000e040e080e0c0e100e140e180e1c0e200e240e280e2c0e300e340e380e3c0e400e440e480e4c0e500e540e580e5c0e600e640e680e6c0e700e740e780e7c0e800e840e880e8c0e900e940e980e9c0ea00ea40ea80eac0eb00eb40eb80ebc0ec00ec40ec80ecc0ed00ed40ed80edc0ee00ee40ee80eec0ef00ef40ef80efc0e000f040f080f0c0f100f140f180f1c0f200f240f280f2c0f300f340f380f3c0f400f440f480f4c0f500f540f580f5c0f600f640f680f6c0f700f740f780f7c0f800f840f880f8c0f900f940f980f9c0fa00fa40fa80fac0fb00fb40fb80fbc0fc00fc40fc80fcc0fd00fd40fd80fdc0fe00fe40fe80fec0ff00ff40f')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="58">set_framegrabber_param (AcqHandle, 'LineSelector', 'Line0')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="59">set_framegrabber_param (AcqHandle, 'LineDebouncerTime', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="60">set_framegrabber_param (AcqHandle, 'CounterSelector', 'Counter0')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="61">set_framegrabber_param (AcqHandle, 'CounterEventSource', 'Off')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="62">set_framegrabber_param (AcqHandle, 'CounterResetSource', 'Off')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="63">set_framegrabber_param (AcqHandle, 'CounterValue', 1)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="64">set_framegrabber_param (AcqHandle, 'GevSupportedOptionSelector', 'CCPApplicationSocket')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="65">set_framegrabber_param (AcqHandle, 'GevCurrentIPConfigurationDHCP', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="66">set_framegrabber_param (AcqHandle, 'GevCurrentIPConfigurationPersistentIP', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="67">set_framegrabber_param (AcqHandle, 'GevPAUSEFrameReception', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="68">set_framegrabber_param (AcqHandle, 'GevPersistentIPAddress', 1442913535)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="69">set_framegrabber_param (AcqHandle, 'GevPersistentSubnetMask', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[1,2,2]" as_ord="70">set_framegrabber_param (AcqHandle, 'GevPersistentDefaultGateway', 0)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[2,1]" as_ord="1">grab_image_start (AcqHandle, -1)</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[2,3]" as_ord="1">grab_image_async (Image, AcqHandle, -1)</l>
+<l>write_image (Image, 'jpeg', 65280, 'currentpicture.jpg')</l>
+<l as_id="image_acquisition" as_name="Image Acquisition 01" as_grp="[4,1]" as_ord="1">close_framegrabber (AcqHandle)</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<l>* write_image (Image, 'jpeg', 65280, 'currentpicture.jpg')</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<l>get_system ('example_dir', ExampleDir)</l>
+<l>ImageDir := 'D:/ModbusNet2/Modbus Poll CS/Modbus Poll CS/hdevelop'</l>
+<l>ExampleDataDir := 'classify_pill_defects_data'</l>
+<l>PreprocessParamFileName := 'classify_pill_defects_preprocess_param.hdict'</l>
+<l>RetrainedModelFileName := 'classify_pill_defects.hdl'</l>
+<l>BatchSizeInference := 1</l>
+<l>read_dl_model (RetrainedModelFileName, DLModelHandle)</l>
+<l>get_dl_model_param (DLModelHandle, 'class_names', ClassNames)</l>
+<l>get_dl_model_param (DLModelHandle, 'class_ids', ClassIDs)</l>
+<l>set_dl_model_param (DLModelHandle, 'batch_size', BatchSizeInference)</l>
+<l>set_dl_model_param (DLModelHandle, 'runtime', 'cpu')</l>
+<l>set_dl_model_param (DLModelHandle, 'runtime_init', 'immediately')</l>
+<l>read_dict (PreprocessParamFileName, [], [], DLPreprocessParam)</l>
+<l>create_dict (WindowHandleDict)</l>
+<l>create_dict (DLDataInfo)</l>
+<l>set_dict_tuple (DLDataInfo, 'class_names', ClassNames)</l>
+<l>set_dict_tuple (DLDataInfo, 'class_ids', ClassIDs)</l>
+<l>create_dict (GenParam)</l>
+<l>set_dict_tuple (GenParam, 'scale_windows', 1.1)</l>
+<l>get_example_inference_images_COPY_1 (ImageDir, ImageFiles)</l>
+<l>for BatchIndex := 0 to floor(|ImageFiles| / real(BatchSizeInference)) - 1 by 1</l>
+<l>    Batch := ImageFiles[BatchIndex * BatchSizeInference:(BatchIndex + 1) * BatchSizeInference - 1]</l>
+<l>    read_image (ImageBatch, Batch)</l>
+<l>    gen_dl_samples_from_images (ImageBatch, DLSampleBatch)</l>
+<l>    preprocess_dl_samples (DLSampleBatch, DLPreprocessParam)</l>
+<l>    apply_dl_model (DLModelHandle, DLSampleBatch, [], DLResultBatch)</l>
+<l>    for SampleIndex := 0 to BatchSizeInference - 1 by 1</l>
+<l>        DLSample := DLSampleBatch[SampleIndex]</l>
+<l>        DLResult := DLResultBatch[SampleIndex]</l>
+<l>        get_dict_tuple (DLResult, 'classification_class_ids', ClassificationClassID)</l>
+<l>        Classfication_Result := ClassificationClassID[0]</l>
+<l>    endfor</l>
+<l>endfor</l>
+<l>return ()</l>
+</body>
+<docu id="astart_classfication">
+<parameters>
+<parameter id="ClassificationClassID"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="get_example_inference_images_COPY_1">
+<interface>
+<ic>
+<par name="ImageDir" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ImageFiles" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure creates a list of images used for this example.</c>
+<c></c>
+<l>NumSamples := 1</l>
+<l>list_image_files (ImageDir, 'default', 'recursive', ImageFilesAll)</l>
+<c>* ** tuple_shuffle (ImageFilesAll, ImageFilesAll)</c>
+<l>ImageFiles := ImageFilesAll[0:NumSamples - 1]</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="get_example_inference_images_COPY_1">
+<parameters>
+<parameter id="ImageDir"/>
+<parameter id="ImageFiles"/>
+</parameters>
+</docu>
+</procedure>
+</hdevelop>
